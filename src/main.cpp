@@ -13,10 +13,10 @@ DateTime *dt = new DateTime();
 
 void setup()
 {
-#ifdef DEBUG
-    Serial.begin(9600);
-#endif
-
+// #ifdef DEBUG
+//     Serial.begin(9600);
+// #endif
+    // Serial.begin(9600);
     pinMode(DHT_POWER, OUTPUT);
     pinMode(POWER_OUTLET_1_PIN, OUTPUT);
     pinMode(POWER_OUTLET_2_PIN, OUTPUT);

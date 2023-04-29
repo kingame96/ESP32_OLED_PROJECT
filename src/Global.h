@@ -51,7 +51,7 @@
 #define API_KEY                     PRIVATE_API_KEY
 #define DATABASE_URL                PRIVATE_DATABASE_URL
 #define DATABASE_SIGN_UP_INTERVAL   2000    /* ms */
-#define DATABASE_READ_DATA_INTERVAL 2000     /* ms */
+#define DATABASE_READ_DATA_INTERVAL 10000     /* ms */
 
 #define DATABASE_DATA_SIZE          7
 

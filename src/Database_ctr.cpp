@@ -32,6 +32,18 @@ static Database_Data dataTable[DATABASE_DATA_SIZE] =
 
 static uint8_t data_index = 0;
 
+static void update_data_table_status(bool inputStatus, int dataIndex) 
+{
+    if (inputStatus != *(bool *)(dataTable[dataIndex].status))
+    {
+        *(bool *)(dataTable[dataIndex].status) = inputStatus;
+        if (dataTable[dataIndex].operation != NULL)
+        {
+            dataTable[dataIndex].operation(inputStatus);
+        }
+    }
+}
+
 static void on_data_callback(StreamData data)
 {
     FirebaseJson &jsondata = data.jsonObject();
@@ -63,23 +75,23 @@ static void on_data_callback(StreamData data)
     if (!is_database_first_time_read)
     {
         FirebaseJsonData json;
-        if (jsondata.get(json, "App"))
+        
+        for (uint8_t i = 0; i < DATABASE_DATA_SIZE; ++i)
         {
-            for(uint8_t i = 0; i < DATABASE_DATA_SIZE; ++i)
+            if ((String("/") + dataTable[i].database_path) == (data.dataPath() + String("/")))
             {
-                if ((String("/") + dataTable[i].database_path) == (data.dataPath() + String("/")))
+                if (jsondata.get(json, "App"))
                 {
                     bool status = json.boolValue;
 
-                    if (status != *(bool *)(dataTable[i].status))
-                    {
-                        *(bool *)(dataTable[i].status) = status;
-                        if (dataTable[i].operation != NULL)
-                        {
-                            dataTable[i].operation(status);
-                        }
-                    }
+                    update_data_table_status(status, i);
                 }
+            }
+            else if ((String("/") + dataTable[i].database_path + "App") == (data.dataPath())) 
+            {
+                bool status = data.boolData();
+
+                update_data_table_status(status, i);
             }
         }
     }
@@ -128,7 +140,7 @@ bool database_send_data(int data_position, bool setData)
 
 void database_read_data()
 {
-    #if 0
+
     bool status = false;
 
     if ((millis() - readDataTimeStamp >= DATABASE_READ_DATA_INTERVAL))
@@ -136,30 +148,11 @@ void database_read_data()
         readDataTimeStamp = millis();
         if (Firebase.ready())
         {
-            if (Firebase.RTDB.getJSON(&firebaseData, "ESP32_OLED_PROJECT"))
-            {
-                FirebaseJson &jsondata = firebaseData.jsonObject();
-
-                for (uint8_t i = 0; i < DATABASE_DATA_SIZE; ++i)
-                {
-                    FirebaseJsonData json;
-                    jsondata.get(json, data[i].database_path + "App");
-                    bool status = json.boolValue;
-
-                    if (status != *(bool *)(data[i].status))
-                    {
-                        *(bool *)(data[i].status) = status;
-                        if (data[i].operation != NULL)
-                        {
-                            data[i].operation(status);
-                        }
-                    }
-                    is_database_init = true;
-                }
-            }
+#if 1
+            Firebase.readStream(streamData);
+#endif
         }
     }
-    #endif
 }
 
 void database_ctrl()
