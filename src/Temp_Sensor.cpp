@@ -7,6 +7,8 @@ static DHT dht(DHT_PIN, DHT_TYPE);
 static float humidity = 0;
 static float temperature = 0;
 
+static uint32_t dht_read_timestamp = 0;
+
 void Temp_Sensor_Set_Power(bool state)
 {
     if (state)
@@ -27,19 +29,19 @@ void Temp_Sensor_Init()
 
 void Temp_Sensor_Read_Humidity()
 {
-    humidity = dht.readHumidity();
-    if ( isnan(humidity) )
+    float hmd = dht.readHumidity();
+    if ( !isnan(hmd) )
     {
-        humidity = 0;
+        humidity = hmd;
     }
 }
 
 void Temp_Sensor_Read_Temperature()
 {
-    temperature = dht.readTemperature();
-    if ( isnan(temperature) )
+    float temp = dht.readTemperature();
+    if ( !isnan(temp) )
     {
-        temperature = 0;
+        temperature = temp;
     }
 }
 
@@ -50,16 +52,25 @@ void Temp_Sensor_Ctrl()
     case TEMP_SENSOR_INIT:
         Temp_Sensor_Init();
         ctrl_state = TEMP_SENSOR_READ_TEMPERATURE;
+        dht_read_timestamp = millis();
         break;
     
     case TEMP_SENSOR_READ_TEMPERATURE:
-        Temp_Sensor_Read_Temperature();
-        ctrl_state = TEMP_SENSOR_READ_HUMIDITY;
+        if (millis() - dht_read_timestamp >= DHT_READ_INTERVAL)
+        {
+            dht_read_timestamp = millis();
+            Temp_Sensor_Read_Temperature();
+            ctrl_state = TEMP_SENSOR_READ_HUMIDITY;
+        }
         break;
 
     case TEMP_SENSOR_READ_HUMIDITY:
-        Temp_Sensor_Read_Humidity();
-        ctrl_state = TEMP_SENSOR_READ_TEMPERATURE;
+        if (millis() - dht_read_timestamp >= DHT_READ_INTERVAL)
+        {
+            dht_read_timestamp = millis();
+            Temp_Sensor_Read_Humidity();
+            ctrl_state = TEMP_SENSOR_READ_TEMPERATURE;
+        }
         break;
 
     case TEMP_SENSOR_POWER_STOP:

@@ -11,6 +11,7 @@
 #define DHT_POWER   18
 #define DHT_PIN     15
 #define DHT_TYPE    DHT11
+#define DHT_READ_INTERVAL   500
 
 /**
  * @brief Wifi Information
